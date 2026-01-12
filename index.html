@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DentalCare Pro - AI Receptionist</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* (keep the same CSS as before) */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-gradient">
+            <div class="header-content">
+                <h1><i class="fas fa-tooth"></i> DentalCare Pro</h1>
+                <p>Your Intelligent Dental Appointment Assistant</p>
+            </div>
+        </div>
+        
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <!-- initial bot message moved to script -->
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            
+            <div class="input-area">
+                <input type="text" id="userInput" placeholder="Type your message here..." autocomplete="off">
+                <button id="sendButton"><i class="fas fa-paper-plane"></i> Send</button>
+            </div>
+            
+            <div class="quick-actions" id="quickActions">
+                <button class="quick-action-btn" onclick="selectQuickAction('appointment')">
+                    <i class="fas fa-calendar-check"></i> Schedule Appointment
+                </button>
+                <button class="quick-action-btn" onclick="selectQuickAction('services')">
+                    <i class="fas fa-list-alt"></i> Services Inquiry
+                </button>
+                <button class="quick-action-btn" onclick="selectQuickAction('emergency')">
+                    <i class="fas fa-heartbeat"></i> Emergency?
+                </button>
+                <button class="quick-action-btn" onclick="selectQuickAction('change')">
+                    <i class="fas fa-sync-alt"></i> Change Appointment
+                </button>
+            </div>
+            
+            <div class="calendar-link" id="calendarLink">
+                <p><i class="fas fa-calendar-plus"></i> <a href="#" target="_blank">Add to Google Calendar</a></p>
+            </div>
+            
+            <div class="status" id="statusMessage"></div>
+        </div>
+    </div>
+
+    <script type="module" src="./dist/main.js"></script>
+</body>
+</html>

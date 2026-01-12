@@ -1,0 +1,16 @@
+{
+  "name": "ai-receptionist",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/main.ts --bundle --minify --sourcemap --outfile=dist/main.js",
+    "dev": "esbuild src/main.ts --bundle --sourcemap --outfile=dist/main.js --watch",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "esbuild": "^0.18.0",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.0.0"
+  }
+}
