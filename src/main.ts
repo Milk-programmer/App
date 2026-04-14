@@ -2,7 +2,9 @@
 
 type ConversationState =
   | 'initial'
-  | 'service'
+  | 'service_category'
+  | 'service_selection'
+  | 'patient_type'
   | 'date_input'
   | 'time_input'
   | 'name'
@@ -15,6 +17,8 @@ type ConversationState =
 
 interface AppointmentData {
   service?: string;
+  serviceCategory?: string;
+  patientType?: string;
   name?: string;
   phone?: string;
   email?: string;
@@ -39,7 +43,34 @@ let appointmentData: AppointmentData = {};
 let selectedDate: string | null = null;
 let selectedTime: string | null = null;
 
-addBotMessage("Hello! I'm Dr. CareBot, your DentalCare AI assistant. How can I help you today? Would you like to schedule an appointment, inquire about services, or get directions?");
+// Surgery categories and types
+const surgeryCategories = {
+  'Cardiac': ['Heart Bypass Surgery', 'Valve Replacement', 'Angioplasty', 'Pacemaker Implantation', 'Heart Transplant'],
+  'Orthopedic': ['Knee Replacement', 'Hip Replacement', 'Spine Surgery', 'Arthroscopy', 'Fracture Repair'],
+  'Neurological': ['Brain Tumor Removal', 'Spinal Fusion', 'Craniotomy', 'Epilepsy Surgery', 'Nerve Repair'],
+  'General': ['Appendectomy', 'Hernia Repair', 'Gallbladder Removal', 'Bowel Resection', 'Mastectomy'],
+  'Plastic': ['Breast Augmentation', 'Liposuction', 'Rhinoplasty', 'Facelift', 'Reconstructive Surgery'],
+  'Urological': ['Kidney Stone Removal', 'Prostate Surgery', 'Cystoscopy', 'Vasectomy', 'Kidney Transplant'],
+  'Gynecological': ['Hysterectomy', 'C-Section', 'Ovarian Cyst Removal', 'Endometrial Ablation', 'Fibroid Removal'],
+  'ENT': ['Tonsillectomy', 'Sinus Surgery', 'Ear Tube Insertion', 'Thyroid Surgery', 'Septoplasty'],
+  'Ophthalmic': ['Cataract Surgery', 'LASIK', 'Glaucoma Surgery', 'Retinal Detachment Repair', 'Corneal Transplant'],
+  'Vascular': ['Varicose Vein Treatment', 'Aneurysm Repair', 'Bypass Surgery', 'Stent Placement', 'Embolectomy'],
+  'Oncological': ['Tumor Removal', 'Lumpectomy', 'Whipple Procedure', 'Colectomy', 'Lymph Node Dissection'],
+  'Emergency': ['Trauma Surgery', 'Emergency Appendectomy', 'Bleeding Control', 'Organ Rupture Repair', 'Amputation']
+};
+
+// Patient types
+const patientTypes = [
+  'Adult (18-65)',
+  'Pediatric (0-17)',
+  'Senior (65+)',
+  'Pregnant',
+  'Critical Care',
+  'Outpatient',
+  'Inpatient'
+];
+
+addBotMessage("Hello! I'm HealthCare Bot, your 24/7 healthcare appointment assistant. We operate around the clock with Morning Shift (9 AM - 10 PM) and Night Shift (10 PM - 9 AM). How can I help you today?");
 
 sendButton.addEventListener('click', handleUserInput);
 userInput.addEventListener('keypress', function (e: KeyboardEvent) {
@@ -117,38 +148,84 @@ function processMessage(userMessage: string): void {
   switch (conversationState) {
     case 'initial':
       if (lowerMsg.includes('appointment') || lowerMsg.includes('schedule') || lowerMsg.includes('book')) {
-        conversationState = 'service';
-        addBotMessage("Great! What type of dental service do you need? Our most common services:\n1. Routine Cleaning\n2. Filling\n3. Root Canal\n4. Whitening\n5. Crown\n6. Checkup\n7. Emergency");
-        showQuickActions(['Routine Cleaning', 'Filling', 'Checkup', 'Emergency']);
-      } else if (lowerMsg.includes('service') || lowerMsg.includes('what do you offer')) {
+        conversationState = 'service_category';
+        const categories = Object.keys(surgeryCategories).join(', ');
+        addBotMessage(`Great! I'll help you schedule an appointment. We offer surgeries in these categories:\n${categories}\n\nWhich category interests you?`);
+        showQuickActions(['Cardiac', 'Orthopedic', 'General', 'Emergency']);
+      } else if (lowerMsg.includes('service') || lowerMsg.includes('what do you offer') || lowerMsg.includes('surgery')) {
         conversationState = 'services_info';
-        addBotMessage("We offer:\n- Comprehensive exams and cleanings\n- Fillings and restorations\n- Root canal therapy\n- Crowns and bridges\n- Teeth whitening\n- Orthodontics\n- Emergency care\nWhich service interests you?");
-        showQuickActions(['Cleaning', 'Whitening', 'Orthodontics']);
+        const allServices = Object.entries(surgeryCategories).map(([cat, services]) => `${cat}: ${services.slice(0, 3).join(', ')}...`).join('\n');
+        addBotMessage(`We offer comprehensive surgical services 24/7:\n\n${allServices}\n\n...and many more procedures in each category.\n\nWould you like to schedule an appointment or learn more about a specific category?`);
+        showQuickActions(['Schedule Appointment', 'More Info']);
       } else if (lowerMsg.includes('emergency')) {
         conversationState = 'emergency';
-        addBotMessage("I understand this is urgent. Can you describe the issue? We have emergency slots available today and tomorrow.");
-        showQuickActions(['Severe Pain', 'Broken Tooth', 'Swelling']);
+        addBotMessage("I understand this is urgent. Our emergency team is available 24/7. Can you describe the issue?");
+        showQuickActions(['Severe Pain', 'Trauma', 'Bleeding', 'Other Emergency']);
       } else {
-        addBotMessage("I can help you with:\n1. Scheduling appointments\n2. Information about our services\n3. Emergency care\n4. Directions to our office\nWhat would you like assistance with?");
-        showQuickActions(['Appointment', 'Services', 'Directions']);
+        addBotMessage("I can help you with:\n1. Scheduling surgical appointments (24/7)\n2. Information about our services\n3. Emergency care\n4. Patient information\n\nWhat would you like assistance with?");
+        showQuickActions(['Appointment', 'Services', 'Emergency', 'Patient Info']);
       }
       break;
 
-    case 'service':
-      if (lowerMsg.includes('cleaning') || lowerMsg.includes('checkup')) {
-        appointmentData.service = 'Routine Cleaning';
-        conversationState = 'date_input';
-        addBotMessage(`Good choice! "${appointmentData.service}" typically takes 45 minutes. Please provide the date you'd like for your appointment (MM/DD/YYYY):`);
-      } else if (lowerMsg.includes('filling') || lowerMsg.includes('root canal') || lowerMsg.includes('crown') || lowerMsg.includes('whitening')) {
-        appointmentData.service = userMessage;
-        conversationState = 'date_input';
-        addBotMessage(`"${appointmentData.service}" usually takes 1-2 hours. Please provide the date you'd like for your appointment (MM/DD/YYYY):`);
-      } else if (lowerMsg.includes('emergency')) {
-        appointmentData.service = 'Emergency Care';
-        conversationState = 'emergency_details';
-        addBotMessage("I understand this is urgent. Can you describe the issue? We have emergency slots available today and tomorrow.");
+    case 'service_category':
+      // Check if the message matches any category
+      let matchedCategory = '';
+      for (const category of Object.keys(surgeryCategories)) {
+        if (lowerMsg.includes(category.toLowerCase())) {
+          matchedCategory = category;
+          break;
+        }
+      }
+      
+      if (matchedCategory) {
+        appointmentData.serviceCategory = matchedCategory;
+        conversationState = 'service_selection';
+        const services = surgeryCategories[matchedCategory as keyof typeof surgeryCategories];
+        addBotMessage(`Excellent choice! ${matchedCategory} surgeries include:\n${services.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\nWhich specific procedure do you need?`);
+        showQuickActions(services.slice(0, 5));
       } else {
-        addBotMessage("Could you specify which service you need? Options: cleaning, filling, root canal, whitening, crown, checkup, or emergency.");
+        addBotMessage("Could you specify which surgery category you need? Options include: Cardiac, Orthopedic, Neurological, General, Plastic, Urological, Gynecological, ENT, Ophthalmic, Vascular, Oncological, or Emergency.");
+      }
+      break;
+
+    case 'service_selection':
+      // Check if the message matches any service in the selected category
+      const category = appointmentData.serviceCategory as keyof typeof surgeryCategories;
+      const servicesInCategory = surgeryCategories[category];
+      let matchedService = '';
+      
+      for (const service of servicesInCategory) {
+        if (lowerMsg.includes(service.toLowerCase()) || lowerMsg.includes(service.split(' ')[0].toLowerCase())) {
+          matchedService = service;
+          break;
+        }
+      }
+      
+      if (matchedService) {
+        appointmentData.service = matchedService;
+        conversationState = 'patient_type';
+        addBotMessage(`Perfect! "${matchedService}" has been selected.\n\nNow, what type of patient is this for?\n${patientTypes.join('\n')}`);
+        showQuickActions(patientTypes);
+      } else {
+        addBotMessage(`Please select a specific procedure from the ${category} category: ${servicesInCategory.join(', ')}`);
+      }
+      break;
+
+    case 'patient_type':
+      let matchedPatientType = '';
+      for (const pType of patientTypes) {
+        if (lowerMsg.includes(pType.toLowerCase().split(' ')[0])) {
+          matchedPatientType = pType;
+          break;
+        }
+      }
+      
+      if (matchedPatientType) {
+        appointmentData.patientType = matchedPatientType;
+        conversationState = 'date_input';
+        addBotMessage(`Thank you. Now please provide the date you'd like for your appointment (MM/DD/YYYY):\n\nOur facility operates 24/7:\n🌅 Morning Shift: 9:00 AM - 10:00 PM\n🌙 Night Shift: 10:00 PM - 9:00 AM`);
+      } else {
+        addBotMessage(`Please select a patient type: ${patientTypes.join(', ')}`);
       }
       break;
 
@@ -156,7 +233,7 @@ function processMessage(userMessage: string): void {
       if (isValidDate(userMessage)) {
         selectedDate = userMessage;
         conversationState = 'time_input';
-        addBotMessage("Perfect! Now please provide the time you'd like (e.g., 9:00 AM, 2:30 PM):");
+        addBotMessage("Perfect! Now please provide the time you'd like (e.g., 9:00 AM, 2:30 PM, 11:00 PM).\n\nRemember:\n- Morning Shift: 9:00 AM - 10:00 PM\n- Night Shift: 10:00 PM - 9:00 AM\n\nWe accept appointments at any time!");
       } else {
         addBotMessage("Please enter a valid date in MM/DD/YYYY format.");
       }
@@ -165,16 +242,16 @@ function processMessage(userMessage: string): void {
     case 'time_input':
       selectedTime = userMessage;
       conversationState = 'name';
-      addBotMessage(`Great! I've reserved ${selectedDate} at ${selectedTime} for ${appointmentData.service}. Now, could you please share your full name?`);
+      addBotMessage(`Great! I've reserved ${selectedDate} at ${selectedTime} for ${appointmentData.service} (${appointmentData.patientType}).\n\nNow, could you please share the patient's full name?`);
       break;
 
     case 'name':
       if (userMessage.split(' ').length >= 2) {
         appointmentData.name = userMessage;
         conversationState = 'contact';
-        addBotMessage(`Thank you, ${userMessage}! Please provide your phone number so we can confirm your appointment.`);
+        addBotMessage(`Thank you! Please provide a phone number for appointment confirmation.`);
       } else {
-        addBotMessage("Please enter your full name (first and last name).");
+        addBotMessage("Please enter the patient's full name (first and last name).");
       }
       break;
 
@@ -182,9 +259,9 @@ function processMessage(userMessage: string): void {
       if (userMessage.trim().length > 0) {
         appointmentData.phone = userMessage;
         conversationState = 'email';
-        addBotMessage("Almost done! Please provide your email address for confirmation.");
+        addBotMessage("Almost done! Please provide an email address for confirmation.");
       } else {
-        addBotMessage("Please enter your phone number.");
+        addBotMessage("Please enter a phone number.");
       }
       break;
 
@@ -193,7 +270,7 @@ function processMessage(userMessage: string): void {
         appointmentData.email = userMessage;
         conversationState = 'confirm';
 
-        const summary = `Here's your appointment summary:\nService: ${appointmentData.service}\nDate: ${selectedDate}\nTime: ${selectedTime}\nName: ${appointmentData.name}\nPhone: ${appointmentData.phone}\nEmail: ${appointmentData.email}\n\nIs this correct? Please reply with "Yes" to confirm or "No" to make changes.`;
+        const summary = `Here's your appointment summary:\nProcedure: ${appointmentData.service}\nCategory: ${appointmentData.serviceCategory}\nPatient Type: ${appointmentData.patientType}\nDate: ${selectedDate}\nTime: ${selectedTime}\nPatient Name: ${appointmentData.name}\nPhone: ${appointmentData.phone}\nEmail: ${appointmentData.email}\n\nIs this correct? Please reply with "Yes" to confirm or "No" to make changes.`;
         addBotMessage(summary);
         showQuickActions(['Yes', 'No']);
       } else {
@@ -205,36 +282,50 @@ function processMessage(userMessage: string): void {
       if (lowerMsg.includes('yes') || lowerMsg.includes('confirm')) {
         submitToGoogleAppsScript(appointmentData);
       } else {
-        addBotMessage("Let's start over. What type of dental service do you need?");
-        conversationState = 'service';
+        addBotMessage("Let's start over. Which surgery category do you need?");
+        conversationState = 'service_category';
       }
       break;
 
     case 'emergency':
       appointmentData.emergency = userMessage;
-      conversationState = 'name';
-      addBotMessage(`Thank you for letting us know. We'll prioritize your case. Could you please share your full name for our emergency records?`);
+      conversationState = 'emergency_details';
+      addBotMessage(`Thank you for letting us know. Can you provide more details about the emergency? This helps us prepare for your arrival.`);
       break;
 
     case 'emergency_details':
       appointmentData.emergency_details = userMessage;
       conversationState = 'name';
-      addBotMessage(`Thank you for sharing. Could you please provide your full name so we can prepare for your visit?`);
+      addBotMessage(`Thank you for sharing. Our emergency team is being notified. Could you please provide the patient's full name?`);
       break;
 
     case 'services_info':
-      if (lowerMsg.includes('cleaning') || lowerMsg.includes('whitening') || lowerMsg.includes('orthodontics')) {
-        addBotMessage(`Our ${userMessage} service includes:\n- Professional assessment\n- Detailed procedure\n- Post-treatment care instructions\n- Follow-up recommendations\nWould you like to schedule this service?`);
-        showQuickActions(['Schedule Now', 'More Info']);
+      if (lowerMsg.includes('more info') || lowerMsg.includes('learn more')) {
+        addBotMessage("Which category would you like to know more about?\n" + Object.keys(surgeryCategories).join('\n'));
+        showQuickActions(['Cardiac', 'Orthopedic', 'Neurological', 'General']);
+      } else if (lowerMsg.includes('schedule') || lowerMsg.includes('appointment')) {
+        conversationState = 'service_category';
+        const categories = Object.keys(surgeryCategories).join(', ');
+        addBotMessage(`Great! Which surgery category are you interested in?\n${categories}`);
+        showQuickActions(['Cardiac', 'Orthopedic', 'General', 'Emergency']);
       } else {
-        addBotMessage("Would you like more information about any specific service, or shall we schedule an appointment?");
-        showQuickActions(['Schedule Appointment', 'More Services']);
+        // Show info about a specific category if mentioned
+        for (const cat of Object.keys(surgeryCategories)) {
+          if (lowerMsg.includes(cat.toLowerCase())) {
+            const services = surgeryCategories[cat as keyof typeof surgeryCategories];
+            addBotMessage(`${cat} Surgery Services:\n${services.join('\n')}\n\nWould you like to schedule an appointment for any of these procedures?`);
+            showQuickActions(['Schedule Appointment', 'Back to Categories']);
+            return;
+          }
+        }
+        addBotMessage("Would you like more information about any specific service category, or shall we schedule an appointment?");
+        showQuickActions(['Schedule Appointment', 'All Categories']);
       }
       break;
 
     default:
-      addBotMessage("How else can I assist you today? You can ask about services, schedule an appointment, or get directions to our office.");
-      showQuickActions(['Appointment', 'Services', 'Directions']);
+      addBotMessage("How else can I assist you today? You can ask about services, schedule an appointment, or get emergency care.");
+      showQuickActions(['Appointment', 'Services', 'Emergency']);
   }
 }
 
@@ -284,6 +375,8 @@ function submitToGoogleAppsScript(data: AppointmentData): void {
   formData.append('phone', data.phone ?? '');
   formData.append('email', data.email ?? '');
   formData.append('service', data.service ?? '');
+  formData.append('service_category', data.serviceCategory ?? '');
+  formData.append('patient_type', data.patientType ?? '');
   formData.append('date', selectedDate ?? '');
   formData.append('time', selectedTime ?? '');
   formData.append('emergency_details', data.emergency_details ?? '');
@@ -297,7 +390,7 @@ function submitToGoogleAppsScript(data: AppointmentData): void {
       if (result.result === 'success') {
         statusMessage.textContent = 'Appointment confirmed and saved to our system!';
         createCalendarLink(data);
-        addBotMessage('🎉 Your appointment has been scheduled successfully! A confirmation email has been sent to you. Thank you for choosing DentalCare Pro!');
+        addBotMessage('🎉 Your appointment has been scheduled successfully! A confirmation email has been sent to you. Thank you for choosing HealthCare Pro!');
         resetConversation();
       } else {
         statusMessage.textContent = 'Error submitting appointment. Please try again.';
@@ -335,7 +428,7 @@ function createCalendarLink(data: AppointmentData): void {
   const startFormatted = formatDateForCalendar(startTime);
   const endFormatted = formatDateForCalendar(endTime);
 
-  const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Dental Appointment: ${encodeURIComponent(data.name ?? '')}&dates=${startFormatted}/${endFormatted}&details=Service: ${encodeURIComponent(data.service ?? '')}%0APatient: ${encodeURIComponent(data.name ?? '')}%0APhone: ${encodeURIComponent(data.phone ?? '')}%0AEmail: ${encodeURIComponent(data.email ?? '')}&location=DentalCare Pro`;
+  const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Surgery Appointment: ${encodeURIComponent(data.name ?? '')}&dates=${startFormatted}/${endFormatted}&details=Procedure: ${encodeURIComponent(data.service ?? '')}%0ACategory: ${encodeURIComponent(data.serviceCategory ?? '')}%0APatient Type: ${encodeURIComponent(data.patientType ?? '')}%0APatient: ${encodeURIComponent(data.name ?? '')}%0APhone: ${encodeURIComponent(data.phone ?? '')}%0AEmail: ${encodeURIComponent(data.email ?? '')}&location=HealthCare Pro Hospital`;
 
   const linkElement = calendarLink.querySelector('a') as HTMLAnchorElement | null;
   if (linkElement) {
@@ -357,8 +450,8 @@ function resetConversation(): void {
   conversationState = 'initial';
   setTimeout(() => {
     calendarLink.style.display = 'none';
-    addBotMessage("Is there anything else I can help you with today? You can ask about our services, schedule another appointment, or get directions to our office.");
-    showQuickActions(['Services', 'Directions', 'Contact Info']);
+    addBotMessage("Is there anything else I can help you with today? You can ask about our surgical services, schedule another appointment, or get emergency care.");
+    showQuickActions(['Services', 'Appointment', 'Emergency']);
   }, 1500);
 }
 
