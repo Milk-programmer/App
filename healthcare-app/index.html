@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthCare Pro - 24/7 Appointment System</title>
+    <style>
+        :root {
+            --primary: #007bff;
+            --secondary: #6c757d;
+            --success: #28a745;
+            --danger: #dc3545;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --morning-shift: #ffc107;
+            --night-shift: #17a2b8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body { background-color: #e9ecef; height: 100vh; display: flex; flex-direction: column; }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary), #0056b3);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        header h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .status-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: inline-block;
+        }
+
+        /* Main Chat Area */
+        #chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 1rem;
+            border-radius: 1rem;
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .bot-message {
+            background: white;
+            align-self: flex-start;
+            border-bottom-left-radius: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary);
+        }
+
+        .user-message {
+            background: var(--primary);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .system-message {
+            background: #fff3cd;
+            color: #856404;
+            align-self: center;
+            text-align: center;
+            font-size: 0.9rem;
+            border: 1px solid #ffeeba;
+        }
+
+        /* Controls */
+        #controls {
+            background: white;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .input-group {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.5rem;
+            outline: none;
+        }
+
+        input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,123,255,0.25); }
+
+        button#send-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        button#send-btn:hover { background: #0056b3; }
+
+        /* Quick Actions */
+        .quick-actions {
+            max-width: 800px;
+            margin: 0.5rem auto 0;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .action-btn {
+            background: white;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover { background: var(--primary); color: white; }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: bold; color: var(--dark); }
+        select, input[type="date"], input[type="time"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.5rem;
+        }
+
+        .shift-info {
+            font-size: 0.85rem;
+            color: var(--secondary);
+            margin-top: 0.25rem;
+            display: flex;
+            gap: 1rem;
+        }
+        .shift-morning { color: #d39e00; font-weight: bold; }
+        .shift-night { color: #138496; font-weight: bold; }
+
+        .close-modal {
+            float: right;
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1rem;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        
+        .appointment-card {
+            background: white;
+            border-left: 5px solid var(--success);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .appointment-card h4 { color: var(--primary); margin-bottom: 0.5rem; }
+        .appointment-card p { margin-bottom: 0.25rem; font-size: 0.9rem; }
+        .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: white; }
+        .bg-morning { background-color: var(--morning-shift); color: #333; }
+        .bg-night { background-color: var(--night-shift); }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🏥 HealthCare Pro</h1>
+    <div class="status-badge">🟢 Open 24/7 | Morning: 9AM-10PM | Night: 10PM-9AM</div>
+</header>
+
+<div id="chat-container">
+    <!-- Messages will appear here -->
+</div>
+
+<div id="controls">
+    <div class="input-group">
+        <input type="text" id="user-input" placeholder="Type your message or select an option below..." onkeypress="handleKeyPress(event)">
+        <button id="send-btn" onclick="handleUserMessage()">Send</button>
+    </div>
+    <div class="quick-actions">
+        <button class="action-btn" onclick="startBooking()">📅 Book Appointment</button>
+        <button class="action-btn" onclick="showAppointments()">📋 View My Appointments</button>
+        <button class="action-btn" onclick="resetChat()">🔄 Reset Chat</button>
+        <button class="action-btn" onclick="showInfo()">ℹ️ Shift Info</button>
+    </div>
+</div>
+
+<!-- Booking Modal -->
+<div id="booking-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal('booking-modal')">&times;</span>
+        <h2 style="margin-bottom: 1.5rem; color: var(--primary);">Book New Appointment</h2>
+        
+        <div class="form-group">
+            <label>Patient Name</label>
+            <input type="text" id="patient-name" placeholder="Full Name">
+        </div>
+
+        <div class="form-group">
+            <label>Patient Type</label>
+            <select id="patient-type">
+                <option value="Adult">Adult (18-64)</option>
+                <option value="Pediatric">Pediatric (0-17)</option>
+                <option value="Senior">Senior (65+)</option>
+                <option value="Pregnant">Pregnant / Maternity</option>
+                <option value="Critical Care">Critical Care</option>
+                <option value="Outpatient">Outpatient</option>
+                <option value="Inpatient">Inpatient Transfer</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Surgery / Service Type</label>
+            <select id="surgery-type">
+                <option value="General Consultation">General Consultation</option>
+                <option value="Cardiac Surgery">Cardiac Surgery (Heart)</option>
+                <option value="Orthopedic Surgery">Orthopedic Surgery (Bones/Joints)</option>
+                <option value="Neurological Surgery">Neurological Surgery (Brain/Nerves)</option>
+                <option value="Plastic Surgery">Plastic & Reconstructive</option>
+                <option value="Urological Surgery">Urological Surgery</option>
+                <option value="Gynecological Surgery">Gynecological Surgery</option>
+                <option value="ENT Surgery">ENT (Ear, Nose, Throat)</option>
+                <option value="Ophthalmic Surgery">Ophthalmic (Eye)</option>
+                <option value="Vascular Surgery">Vascular Surgery</option>
+                <option value="Oncological Surgery">Oncological (Cancer)</option>
+                <option value="Emergency Trauma">Emergency Trauma</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Preferred Date</label>
+            <input type="date" id="appt-date">
+        </div>
+
+        <div class="form-group">
+            <label>Preferred Time</label>
+            <input type="time" id="appt-time">
+            <div class="shift-info">
+                <span class="shift-morning">☀️ Morning: 09:00 - 22:00</span>
+                <span class="shift-night">🌙 Night: 22:00 - 09:00</span>
+            </div>
+        </div>
+
+        <button class="btn-submit" onclick="confirmBooking()">Confirm Appointment</button>
+    </div>
+</div>
+
+<!-- Appointments List Modal -->
+<div id="list-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal('list-modal')">&times;</span>
+        <h2 style="margin-bottom: 1.5rem; color: var(--primary);">Your Appointments</h2>
+        <div id="appointments-list">
+            <p style="text-align:center; color: #666;">No appointments found.</p>
+        </div>
+        <button class="btn-submit" style="background: var(--danger);" onclick="clearAllAppointments()">Cancel All</button>
+    </div>
+</div>
+
+<script>
+    // State Management
+    let appointments = [];
+    const chatContainer = document.getElementById('chat-container');
+    
+    // Initial Greeting
+    window.onload = function() {
+        addBotMessage("Hello! Welcome to HealthCare Pro. I am your AI scheduling assistant.");
+        setTimeout(() => {
+            addBotMessage("We operate 24/7 with two shifts:<br>• <b>Morning Shift:</b> 9:00 AM to 10:00 PM<br>• <b>Night Shift:</b> 10:00 PM to 9:00 AM<br><br>How can I help you today? You can click 'Book Appointment' below or type your request.");
+        }, 800);
+        
+        // Set min date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('appt-date').setAttribute('min', today);
+    };
+
+    function handleKeyPress(e) {
+        if (e.key === 'Enter') handleUserMessage();
+    }
+
+    function handleUserMessage() {
+        const input = document.getElementById('user-input');
+        const text = input.value.trim();
+        if (!text) return;
+
+        addUserMessage(text);
+        input.value = '';
+
+        // Simple AI Logic
+        setTimeout(() => {
+            const lowerText = text.toLowerCase();
+            if (lowerText.includes('book') || lowerText.includes('schedule') || lowerText.includes('appointment')) {
+                startBooking();
+                addBotMessage("I've opened the booking form for you. Please fill in the details.");
+            } else if (lowerText.includes('view') || lowerText.includes('list') || lowerText.includes('my appointment')) {
+                showAppointments();
+            } else if (lowerText.includes('cancel')) {
+                addBotMessage("You can view and cancel your appointments by clicking the 'View My Appointments' button.");
+                showAppointments();
+            } else if (lowerText.includes('shift') || lowerText.includes('hour') || lowerText.includes('open')) {
+                showInfo();
+            } else if (lowerText.includes('thank')) {
+                addBotMessage("You're welcome! Is there anything else you need?");
+            } else {
+                addBotMessage("I understand. If you'd like to book an appointment, please click the <b>Book Appointment</b> button below. Otherwise, feel free to ask about our services or shifts.");
+            }
+        }, 600);
+    }
+
+    function addUserMessage(text) {
+        const div = document.createElement('div');
+        div.className = 'message user-message';
+        div.innerHTML = text;
+        chatContainer.appendChild(div);
+        scrollToBottom();
+    }
+
+    function addBotMessage(html) {
+        const div = document.createElement('div');
+        div.className = 'message bot-message';
+        div.innerHTML = html;
+        chatContainer.appendChild(div);
+        scrollToBottom();
+    }
+
+    function addSystemMessage(text) {
+        const div = document.createElement('div');
+        div.className = 'message system-message';
+        div.innerText = text;
+        chatContainer.appendChild(div);
+        scrollToBottom();
+    }
+
+    function scrollToBottom() {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // Modal Functions
+    function startBooking() {
+        document.getElementById('booking-modal').style.display = 'flex';
+    }
+
+    function showAppointments() {
+        const listDiv = document.getElementById('appointments-list');
+        listDiv.innerHTML = '';
+        
+        if (appointments.length === 0) {
+            listDiv.innerHTML = '<p style="text-align:center; color: #666; padding: 2rem;">No upcoming appointments.</p>';
+        } else {
+            appointments.forEach((appt, index) => {
+                const shiftType = getShiftType(appt.time);
+                const shiftClass = shiftType === 'Morning' ? 'bg-morning' : 'bg-night';
+                
+                const card = document.createElement('div');
+                card.className = 'appointment-card';
+                card.innerHTML = `
+                    <h4>${appt.surgery}</h4>
+                    <p><strong>Patient:</strong> ${appt.patient} (${appt.type})</p>
+                    <p><strong>Date:</strong> ${appt.date}</p>
+                    <p><strong>Time:</strong> ${appt.time} <span class="badge ${shiftClass}">${shiftType} Shift</span></p>
+                    <button onclick="cancelAppointment(${index})" style="margin-top:10px; background:none; border:none; color:var(--danger); cursor:pointer; text-decoration:underline;">Cancel this appointment</button>
+                `;
+                listDiv.appendChild(card);
+            });
+        }
+        
+        document.getElementById('list-modal').style.display = 'flex';
+    }
+
+    function showInfo() {
+        addBotMessage("<b>Our Operating Hours:</b><br>🏥 We are open 24 hours a day, 7 days a week.<br><br>☀️ <b>Morning Shift:</b> 09:00 AM to 10:00 PM<br>🌙 <b>Night Shift:</b> 10:00 PM to 09:00 AM<br><br>All surgery types are available during both shifts, though non-emergency complex procedures may be prioritized for the Morning Shift.");
+    }
+
+    function resetChat() {
+        chatContainer.innerHTML = '';
+        window.onload();
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+
+    // Booking Logic
+    function confirmBooking() {
+        const name = document.getElementById('patient-name').value;
+        const type = document.getElementById('patient-type').value;
+        const surgery = document.getElementById('surgery-type').value;
+        const date = document.getElementById('appt-date').value;
+        const time = document.getElementById('appt-time').value;
+
+        if (!name || !date || !time) {
+            alert("Please fill in all required fields (Name, Date, Time).");
+            return;
+        }
+
+        // Validate Shift Time
+        const [hours, minutes] = time.split(':').map(Number);
+        // Morning: 9 (9:00) to 22 (22:00). Night: 22 to 9.
+        // Technically 24/7 covers everything, but we label them.
+        
+        const newAppt = {
+            id: Date.now(),
+            patient: name,
+            type: type,
+            surgery: surgery,
+            date: date,
+            time: time
+        };
+
+        appointments.push(newAppt);
+        
+        // Sort by date/time
+        appointments.sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
+
+        closeModal('booking-modal');
+        
+        const shift = getShiftType(time);
+        addSystemMessage(`✅ Appointment Confirmed!`);
+        addBotMessage(`Successfully booked for <b>${name}</b>.<br>Type: ${type}<br>Procedure: ${surgery}<br>When: ${date} at ${time} (${shift} Shift)<br><br>Your appointment has been added to the schedule.`);
+        
+        // Clear form
+        document.getElementById('patient-name').value = '';
+        document.getElementById('appt-date').value = '';
+        document.getElementById('appt-time').value = '';
+    }
+
+    function getShiftType(timeStr) {
+        const [hours] = timeStr.split(':').map(Number);
+        // Morning: 9 <= hour < 22
+        // Night: 22 <= hour OR hour < 9
+        if (hours >= 9 && hours < 22) {
+            return 'Morning';
+        } else {
+            return 'Night';
+        }
+    }
+
+    function cancelAppointment(index) {
+        if(confirm("Are you sure you want to cancel this appointment?")) {
+            appointments.splice(index, 1);
+            showAppointments(); // Refresh list
+            addSystemMessage("❌ Appointment Cancelled");
+        }
+    }
+
+    function clearAllAppointments() {
+        if(appointments.length === 0) return;
+        if(confirm("Cancel ALL appointments? This cannot be undone.")) {
+            appointments = [];
+            showAppointments();
+            addSystemMessage("🗑️ All appointments cleared.");
+        }
+    }
+
+    // Close modal if clicked outside
+    window.onclick = function(event) {
+        if (event.target.className === 'modal') {
+            event.target.style.display = "none";
+        }
+    }
+</script>
+
+</body>
+</html>
