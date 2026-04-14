@@ -3,19 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DentalCare Pro - AI Receptionist</title>
+    <title>HealthCare Pro - AI Appointment Assistant</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* (keep the same CSS as before) */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header-gradient {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header-content h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header-content p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .chat-container {
+            padding: 30px;
+        }
+
+        .chat-messages {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .message {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 10px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: 50px;
+        }
+
+        .bot-message {
+            background: #e9ecef;
+            color: #333;
+            margin-right: 50px;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 10px;
+            gap: 5px;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-area input:focus {
+            border-color: #667eea;
+        }
+
+        .input-area button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: transform 0.2s;
+        }
+
+        .input-area button:hover {
+            transform: translateY(-2px);
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .quick-action-btn {
+            padding: 12px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .quick-action-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .calendar-link {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #d4edda;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .calendar-link a {
+            color: #155724;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .shift-info {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .shift-info h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .shift-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .morning-shift {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .night-shift {
+            background: #6c757d;
+            color: white;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header-gradient">
             <div class="header-content">
-                <h1><i class="fas fa-tooth"></i> DentalCare Pro</h1>
-                <p>Your Intelligent Dental Appointment Assistant</p>
+                <h1><i class="fas fa-hospital"></i> HealthCare Pro</h1>
+                <p>Your 24/7 Intelligent Healthcare Appointment Assistant</p>
             </div>
+        </div>
+        
+        <div class="shift-info">
+            <h3><i class="fas fa-clock"></i> Operating Hours</h3>
+            <span class="shift-badge morning-shift">🌅 Morning Shift: 9:00 AM - 10:00 PM</span>
+            <span class="shift-badge night-shift">🌙 Night Shift: 10:00 PM - 9:00 AM</span>
         </div>
         
         <div class="chat-container">
