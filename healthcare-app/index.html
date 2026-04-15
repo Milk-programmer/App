@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HealthCare Pro - 24/7 Appointment System</title>
+    <title>HealthCare Pro - 24/7 Hospital Appointment System</title>
     <style>
         :root {
             --primary: #007bff;
@@ -168,7 +168,7 @@
 
         .form-group { margin-bottom: 1rem; }
         label { display: block; margin-bottom: 0.5rem; font-weight: bold; color: var(--dark); }
-        select, input[type="date"], input[type="time"] {
+        select, input[type="date"], input[type="time"], input[type="tel"], input[type="email"] {
             width: 100%;
             padding: 0.75rem;
             border: 1px solid #ced4da;
@@ -217,13 +217,24 @@
         .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: white; }
         .bg-morning { background-color: var(--morning-shift); color: #333; }
         .bg-night { background-color: var(--night-shift); }
+        
+        .google-sheets-config {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .google-sheets-config h4 { color: var(--primary); margin-bottom: 0.5rem; }
+        .google-sheets-config p { font-size: 0.85rem; color: var(--secondary); margin-bottom: 0.5rem; }
+        .google-sheets-config input { margin-bottom: 0.5rem; }
 
     </style>
 </head>
 <body>
 
 <header>
-    <h1>🏥 HealthCare Pro</h1>
+    <h1>🏥 HealthCare Pro - Complete Hospital Services</h1>
     <div class="status-badge">🟢 Open 24/7 | Morning: 9AM-10PM | Night: 10PM-9AM</div>
 </header>
 
@@ -238,9 +249,10 @@
     </div>
     <div class="quick-actions">
         <button class="action-btn" onclick="startBooking()">📅 Book Appointment</button>
-        <button class="action-btn" onclick="showAppointments()">📋 View My Appointments</button>
-        <button class="action-btn" onclick="resetChat()">🔄 Reset Chat</button>
+        <button class="action-btn" onclick="showAppointments()">📋 View Appointments</button>
+        <button class="action-btn" onclick="showServices()">🏥 Our Services</button>
         <button class="action-btn" onclick="showInfo()">ℹ️ Shift Info</button>
+        <button class="action-btn" onclick="showGoogleSheetsConfig()">⚙️ Google Sheets Setup</button>
     </div>
 </div>
 
@@ -251,48 +263,127 @@
         <h2 style="margin-bottom: 1.5rem; color: var(--primary);">Book New Appointment</h2>
         
         <div class="form-group">
-            <label>Patient Name</label>
-            <input type="text" id="patient-name" placeholder="Full Name">
+            <label>Patient Full Name *</label>
+            <input type="text" id="patient-name" placeholder="Enter full name">
+        </div>
+
+        <div class="form-group">
+            <label>Contact Phone *</label>
+            <input type="tel" id="patient-phone" placeholder="Phone number">
+        </div>
+
+        <div class="form-group">
+            <label>Email (optional)</label>
+            <input type="email" id="patient-email" placeholder="Email address">
         </div>
 
         <div class="form-group">
             <label>Patient Type</label>
             <select id="patient-type">
-                <option value="Adult">Adult (18-64)</option>
-                <option value="Pediatric">Pediatric (0-17)</option>
-                <option value="Senior">Senior (65+)</option>
+                <option value="Adult">Adult (18-64 years)</option>
+                <option value="Pediatric">Pediatric (0-17 years)</option>
+                <option value="Senior">Senior (65+ years)</option>
                 <option value="Pregnant">Pregnant / Maternity</option>
                 <option value="Critical Care">Critical Care</option>
                 <option value="Outpatient">Outpatient</option>
                 <option value="Inpatient">Inpatient Transfer</option>
+                <option value="Emergency">Emergency</option>
             </select>
         </div>
 
         <div class="form-group">
-            <label>Surgery / Service Type</label>
-            <select id="surgery-type">
-                <option value="General Consultation">General Consultation</option>
-                <option value="Cardiac Surgery">Cardiac Surgery (Heart)</option>
-                <option value="Orthopedic Surgery">Orthopedic Surgery (Bones/Joints)</option>
-                <option value="Neurological Surgery">Neurological Surgery (Brain/Nerves)</option>
-                <option value="Plastic Surgery">Plastic & Reconstructive</option>
-                <option value="Urological Surgery">Urological Surgery</option>
-                <option value="Gynecological Surgery">Gynecological Surgery</option>
-                <option value="ENT Surgery">ENT (Ear, Nose, Throat)</option>
-                <option value="Ophthalmic Surgery">Ophthalmic (Eye)</option>
-                <option value="Vascular Surgery">Vascular Surgery</option>
-                <option value="Oncological Surgery">Oncological (Cancer)</option>
-                <option value="Emergency Trauma">Emergency Trauma</option>
+            <label>Service / Department *</label>
+            <select id="service-type">
+                <optgroup label="🏥 Emergency & Critical Care">
+                    <option value="Emergency Room">Emergency Room (ER)</option>
+                    <option value="Trauma Center">Trauma Center</option>
+                    <option value="Critical Care Unit">Critical Care Unit (ICU)</option>
+                    <option value="Ambulance Service">Ambulance Service</option>
+                </optgroup>
+                <optgroup label="🔪 Surgical Services">
+                    <option value="Cardiac Surgery">Cardiac Surgery (Heart)</option>
+                    <option value="Orthopedic Surgery">Orthopedic Surgery (Bones/Joints)</option>
+                    <option value="Neurological Surgery">Neurological Surgery (Brain/Nerves)</option>
+                    <option value="General Surgery">General Surgery</option>
+                    <option value="Plastic Surgery">Plastic & Reconstructive</option>
+                    <option value="Urological Surgery">Urological Surgery</option>
+                    <option value="Gynecological Surgery">Gynecological Surgery</option>
+                    <option value="ENT Surgery">ENT (Ear, Nose, Throat)</option>
+                    <option value="Ophthalmic Surgery">Ophthalmic (Eye)</option>
+                    <option value="Vascular Surgery">Vascular Surgery</option>
+                    <option value="Oncological Surgery">Oncological (Cancer)</option>
+                    <option value="Bariatric Surgery">Bariatric (Weight Loss)</option>
+                    <option value="Transplant Surgery">Transplant Surgery</option>
+                </optgroup>
+                <optgroup label="🩺 Medical Consultations">
+                    <option value="General Consultation">General Consultation</option>
+                    <option value="Cardiology">Cardiology (Heart)</option>
+                    <option value="Neurology">Neurology (Brain/Nerves)</option>
+                    <option value="Endocrinology">Endocrinology (Hormones/Diabetes)</option>
+                    <option value="Gastroenterology">Gastroenterology (Digestive)</option>
+                    <option value="Pulmonology">Pulmonology (Lungs)</option>
+                    <option value="Nephrology">Nephrology (Kidneys)</option>
+                    <option value="Rheumatology">Rheumatology (Joints/Autoimmune)</option>
+                    <option value="Dermatology">Dermatology (Skin)</option>
+                    <option value="Psychiatry">Psychiatry (Mental Health)</option>
+                    <option value="Oncology">Oncology (Cancer Treatment)</option>
+                    <option value="Infectious Disease">Infectious Disease</option>
+                    <option value="Allergy & Immunology">Allergy & Immunology</option>
+                </optgroup>
+                <optgroup label="🔬 Diagnostics & Imaging">
+                    <option value="X-Ray">X-Ray</option>
+                    <option value="CT Scan">CT Scan</option>
+                    <option value="MRI">MRI</option>
+                    <option value="Ultrasound">Ultrasound</option>
+                    <option value="Mammography">Mammography</option>
+                    <option value="Blood Tests">Blood Tests / Lab Work</option>
+                    <option value="Pathology">Pathology</option>
+                    <option value="ECG/EKG">ECG/EKG</option>
+                    <option value="Echocardiogram">Echocardiogram</option>
+                </optgroup>
+                <optgroup label="💊 Treatment & Therapy">
+                    <option value="Chemotherapy">Chemotherapy</option>
+                    <option value="Radiation Therapy">Radiation Therapy</option>
+                    <option value="Dialysis">Dialysis</option>
+                    <option value="Physical Therapy">Physical Therapy</option>
+                    <option value="Occupational Therapy">Occupational Therapy</option>
+                    <option value="Speech Therapy">Speech Therapy</option>
+                    <option value="Respiratory Therapy">Respiratory Therapy</option>
+                </optgroup>
+                <optgroup label="👶 Women & Children">
+                    <option value="Obstetrics">Obstetrics (Pregnancy Care)</option>
+                    <option value="Gynecology">Gynecology</option>
+                    <option value="Prenatal Care">Prenatal Care</option>
+                    <option value="Pediatrics">Pediatrics</option>
+                    <option value="Neonatal Care">Neonatal Care (NICU)</option>
+                    <option value="Fertility Clinic">Fertility Clinic</option>
+                </optgroup>
+                <optgroup label="💉 Preventive & Wellness">
+                    <option value="Annual Checkup">Annual Checkup / Physical</option>
+                    <option value="Vaccination">Vaccination / Immunization</option>
+                    <option value="Health Screening">Health Screening</option>
+                    <option value="Nutrition Counseling">Nutrition Counseling</option>
+                    <option value="Smoking Cessation">Smoking Cessation</option>
+                    <option value="Weight Management">Weight Management</option>
+                </optgroup>
+                <optgroup label="🦷 Specialized Services">
+                    <option value="Dental Services">Dental Services</option>
+                    <option value="Vision Care">Vision Care / Optometry</option>
+                    <option value="Hearing Services">Hearing Services / Audiology</option>
+                    <option value="Pain Management">Pain Management</option>
+                    <option value="Sleep Medicine">Sleep Medicine</option>
+                    <option value="Rehabilitation">Rehabilitation Services</option>
+                </optgroup>
             </select>
         </div>
 
         <div class="form-group">
-            <label>Preferred Date</label>
+            <label>Preferred Date *</label>
             <input type="date" id="appt-date">
         </div>
 
         <div class="form-group">
-            <label>Preferred Time</label>
+            <label>Preferred Time *</label>
             <input type="time" id="appt-time">
             <div class="shift-info">
                 <span class="shift-morning">☀️ Morning: 09:00 - 22:00</span>
@@ -300,7 +391,12 @@
             </div>
         </div>
 
-        <button class="btn-submit" onclick="confirmBooking()">Confirm Appointment</button>
+        <div class="form-group">
+            <label>Additional Notes</label>
+            <input type="text" id="appt-notes" placeholder="Any special requirements or symptoms">
+        </div>
+
+        <button class="btn-submit" onclick="confirmBooking()">📅 Confirm & Save to Google Sheets</button>
     </div>
 </div>
 
@@ -316,21 +412,128 @@
     </div>
 </div>
 
+<!-- Google Sheets Config Modal -->
+<div id="sheets-config-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal('sheets-config-modal')">&times;</span>
+        <h2 style="margin-bottom: 1.5rem; color: var(--primary);">⚙️ Google Sheets Integration</h2>
+        
+        <div class="google-sheets-config">
+            <h4>Setup Instructions:</h4>
+            <p>1. Create a new Google Sheet at <a href="https://sheets.google.com" target="_blank">sheets.google.com</a></p>
+            <p>2. Name it "Hospital Appointments"</p>
+            <p>3. Add these column headers in row 1: Timestamp, ID, Patient Name, Phone, Email, Patient Type, Service, Date, Time, Shift, Notes, Status</p>
+            <p>4. Go to Extensions > Apps Script</p>
+            <p>5. Paste the provided script code and deploy as Web App</p>
+            <p>6. Copy the Web App URL and paste it below</p>
+        </div>
+        
+        <div class="form-group">
+            <label>Google Apps Script Web App URL</label>
+            <input type="text" id="sheets-webhook-url" placeholder="https://script.google.com/macros/s/.../exec">
+        </div>
+        
+        <button class="btn-submit" onclick="saveSheetsConfig()">Save Configuration</button>
+        <button class="btn-submit" style="background: var(--primary); margin-top: 0.5rem;" onclick="testSheetsConnection()">Test Connection</button>
+    </div>
+</div>
+
+<!-- Services Modal -->
+<div id="services-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal('services-modal')">&times;</span>
+        <h2 style="margin-bottom: 1.5rem; color: var(--primary);">🏥 Our Complete Hospital Services</h2>
+        <div style="max-height: 60vh; overflow-y: auto;">
+            <h3 style="color: var(--primary); margin: 1rem 0 0.5rem;">🚨 Emergency & Critical Care</h3>
+            <ul style="margin-left: 1.5rem; line-height: 1.8;">
+                <li>Emergency Room (ER) - 24/7</li>
+                <li>Trauma Center</li>
+                <li>Critical Care Unit (ICU)</li>
+                <li>Ambulance Service</li>
+            </ul>
+            
+            <h3 style="color: var(--primary); margin: 1rem 0 0.5rem;">🔪 Surgical Services</h3>
+            <ul style="margin-left: 1.5rem; line-height: 1.8;">
+                <li>Cardiac, Orthopedic, Neurological Surgery</li>
+                <li>General, Plastic, Urological Surgery</li>
+                <li>Gynecological, ENT, Ophthalmic Surgery</li>
+                <li>Vascular, Oncological, Bariatric Surgery</li>
+                <li>Transplant Surgery</li>
+            </ul>
+            
+            <h3 style="color: var(--primary); margin: 1rem 0 0.5rem;">🩺 Medical Consultations</h3>
+            <ul style="margin-left: 1.5rem; line-height: 1.8;">
+                <li>Cardiology, Neurology, Endocrinology</li>
+                <li>Gastroenterology, Pulmonology, Nephrology</li>
+                <li>Rheumatology, Dermatology, Psychiatry</li>
+                <li>Oncology, Infectious Disease, Allergy</li>
+            </ul>
+            
+            <h3 style="color: var(--primary); margin: 1rem 0 0.5rem;">🔬 Diagnostics & Imaging</h3>
+            <ul style="margin-left: 1.5rem; line-height: 1.8;">
+                <li>X-Ray, CT Scan, MRI, Ultrasound</li>
+                <li>Mammography, Blood Tests, Pathology</li>
+                <li>ECG/EKG, Echocardiogram</li>
+            </ul>
+            
+            <h3 style="color: var(--primary); margin: 1rem 0 0.5rem;">💊 Treatment & Therapy</h3>
+            <ul style="margin-left: 1.5rem; line-height: 1.8;">
+                <li>Chemotherapy, Radiation Therapy</li>
+                <li>Dialysis, Physical/Occupational/Speech Therapy</li>
+                <li>Respiratory Therapy</li>
+            </ul>
+            
+            <h3 style="color: var(--primary); margin: 1rem 0 0.5rem;">👶 Women & Children</h3>
+            <ul style="margin-left: 1.5rem; line-height: 1.8;">
+                <li>Obstetrics, Gynecology, Prenatal Care</li>
+                <li>Pediatrics, Neonatal Care (NICU)</li>
+                <li>Fertility Clinic</li>
+            </ul>
+            
+            <h3 style="color: var(--primary); margin: 1rem 0 0.5rem;">💉 Preventive & Wellness</h3>
+            <ul style="margin-left: 1.5rem; line-height: 1.8;">
+                <li>Annual Checkups, Vaccinations</li>
+                <li>Health Screenings, Nutrition Counseling</li>
+                <li>Weight Management</li>
+            </ul>
+            
+            <h3 style="color: var(--primary); margin: 1rem 0 0.5rem;">🦷 Specialized Services</h3>
+            <ul style="margin-left: 1.5rem; line-height: 1.8;">
+                <li>Dental, Vision Care, Hearing Services</li>
+                <li>Pain Management, Sleep Medicine</li>
+                <li>Rehabilitation Services</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
 <script>
     // State Management
     let appointments = [];
+    let googleSheetsUrl = localStorage.getItem('googleSheetsWebhookUrl') || '';
     const chatContainer = document.getElementById('chat-container');
     
     // Initial Greeting
     window.onload = function() {
-        addBotMessage("Hello! Welcome to HealthCare Pro. I am your AI scheduling assistant.");
+        addBotMessage("Hello! Welcome to HealthCare Pro - Your Complete Hospital Appointment System. 🏥");
         setTimeout(() => {
-            addBotMessage("We operate 24/7 with two shifts:<br>• <b>Morning Shift:</b> 9:00 AM to 10:00 PM<br>• <b>Night Shift:</b> 10:00 PM to 9:00 AM<br><br>How can I help you today? You can click 'Book Appointment' below or type your request.");
+            addBotMessage("We provide comprehensive healthcare services 24/7 including:<br>• Emergency Care & Trauma Center<br>• All Surgical Procedures<br>• Medical Consultations<br>• Diagnostics & Imaging<br>• Therapy & Rehabilitation<br>• Women & Children's Health<br>• Preventive Care & Wellness<br><br>Our shifts:<br>☀️ <b>Morning:</b> 9:00 AM - 10:00 PM<br>🌙 <b>Night:</b> 10:00 PM - 9:00 AM<br><br>Click 'Book Appointment' or 'Our Services' to get started!");
         }, 800);
+        
+        // Load saved appointments
+        const saved = localStorage.getItem('hospitalAppointments');
+        if (saved) {
+            appointments = JSON.parse(saved);
+        }
         
         // Set min date to today
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('appt-date').setAttribute('min', today);
+        
+        // Load sheets URL if exists
+        if (googleSheetsUrl) {
+            document.getElementById('sheets-webhook-url').value = googleSheetsUrl;
+        }
     };
 
     function handleKeyPress(e) {
@@ -350,18 +553,24 @@
             const lowerText = text.toLowerCase();
             if (lowerText.includes('book') || lowerText.includes('schedule') || lowerText.includes('appointment')) {
                 startBooking();
-                addBotMessage("I've opened the booking form for you. Please fill in the details.");
+                addBotMessage("I've opened the booking form. Please fill in all details to schedule your appointment.");
             } else if (lowerText.includes('view') || lowerText.includes('list') || lowerText.includes('my appointment')) {
                 showAppointments();
             } else if (lowerText.includes('cancel')) {
-                addBotMessage("You can view and cancel your appointments by clicking the 'View My Appointments' button.");
+                addBotMessage("You can view and cancel appointments by clicking 'View Appointments'.");
                 showAppointments();
             } else if (lowerText.includes('shift') || lowerText.includes('hour') || lowerText.includes('open')) {
                 showInfo();
+            } else if (lowerText.includes('service') || lowerText.includes('department') || lowerText.includes('specialty')) {
+                showServices();
+            } else if (lowerText.includes('sheet') || lowerText.includes('google')) {
+                showGoogleSheetsConfig();
             } else if (lowerText.includes('thank')) {
-                addBotMessage("You're welcome! Is there anything else you need?");
+                addBotMessage("You're welcome! Is there anything else I can help you with?");
+            } else if (lowerText.includes('emergency') || lowerText.includes('urgent')) {
+                addBotMessage("⚠️ For medical emergencies, please call emergency services immediately or visit our Emergency Room which is open 24/7. Would you like me to help you book an urgent appointment?");
             } else {
-                addBotMessage("I understand. If you'd like to book an appointment, please click the <b>Book Appointment</b> button below. Otherwise, feel free to ask about our services or shifts.");
+                addBotMessage("Thank you for your message. For appointments, please click <b>'Book Appointment'</b> or explore our <b>'Our Services'</b> to see all available departments. How can I assist you today?");
             }
         }, 600);
     }
@@ -406,6 +615,9 @@
         if (appointments.length === 0) {
             listDiv.innerHTML = '<p style="text-align:center; color: #666; padding: 2rem;">No upcoming appointments.</p>';
         } else {
+            // Sort appointments by date/time
+            appointments.sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
+            
             appointments.forEach((appt, index) => {
                 const shiftType = getShiftType(appt.time);
                 const shiftClass = shiftType === 'Morning' ? 'bg-morning' : 'bg-night';
@@ -413,10 +625,14 @@
                 const card = document.createElement('div');
                 card.className = 'appointment-card';
                 card.innerHTML = `
-                    <h4>${appt.surgery}</h4>
-                    <p><strong>Patient:</strong> ${appt.patient} (${appt.type})</p>
+                    <h4>${appt.service}</h4>
+                    <p><strong>Patient:</strong> ${appt.patient}</p>
+                    <p><strong>Type:</strong> ${appt.type}</p>
+                    <p><strong>Phone:</strong> ${appt.phone || 'N/A'}</p>
                     <p><strong>Date:</strong> ${appt.date}</p>
                     <p><strong>Time:</strong> ${appt.time} <span class="badge ${shiftClass}">${shiftType} Shift</span></p>
+                    <p><strong>Status:</strong> <span style="color: green;">Confirmed</span></p>
+                    ${appt.notes ? `<p><strong>Notes:</strong> ${appt.notes}</p>` : ''}
                     <button onclick="cancelAppointment(${index})" style="margin-top:10px; background:none; border:none; color:var(--danger); cursor:pointer; text-decoration:underline;">Cancel this appointment</button>
                 `;
                 listDiv.appendChild(card);
@@ -426,8 +642,16 @@
         document.getElementById('list-modal').style.display = 'flex';
     }
 
+    function showServices() {
+        document.getElementById('services-modal').style.display = 'flex';
+    }
+
     function showInfo() {
-        addBotMessage("<b>Our Operating Hours:</b><br>🏥 We are open 24 hours a day, 7 days a week.<br><br>☀️ <b>Morning Shift:</b> 09:00 AM to 10:00 PM<br>🌙 <b>Night Shift:</b> 10:00 PM to 09:00 AM<br><br>All surgery types are available during both shifts, though non-emergency complex procedures may be prioritized for the Morning Shift.");
+        addBotMessage("<b>🏥 Hospital Operating Hours:</b><br>We are open 24 hours a day, 7 days a week, 365 days a year.<br><br>☀️ <b>Morning Shift:</b> 09:00 AM to 10:00 PM<br>🌙 <b>Night Shift:</b> 10:00 PM to 09:00 AM<br><br>All services are available during both shifts. Emergency services are always prioritized. Non-emergency procedures may be scheduled based on availability and medical necessity.");
+    }
+
+    function showGoogleSheetsConfig() {
+        document.getElementById('sheets-config-modal').style.display = 'flex';
     }
 
     function resetChat() {
@@ -439,48 +663,125 @@
         document.getElementById(id).style.display = 'none';
     }
 
-    // Booking Logic
-    function confirmBooking() {
-        const name = document.getElementById('patient-name').value;
-        const type = document.getElementById('patient-type').value;
-        const surgery = document.getElementById('surgery-type').value;
-        const date = document.getElementById('appt-date').value;
-        const time = document.getElementById('appt-time').value;
+    // Google Sheets Functions
+    function saveSheetsConfig() {
+        const url = document.getElementById('sheets-webhook-url').value.trim();
+        if (url) {
+            googleSheetsUrl = url;
+            localStorage.setItem('googleSheetsWebhookUrl', url);
+            addSystemMessage("✅ Google Sheets configuration saved!");
+            closeModal('sheets-config-modal');
+        } else {
+            alert("Please enter a valid Google Apps Script Web App URL");
+        }
+    }
 
-        if (!name || !date || !time) {
-            alert("Please fill in all required fields (Name, Date, Time).");
+    async function testSheetsConnection() {
+        const url = document.getElementById('sheets-webhook-url').value.trim();
+        if (!url) {
+            alert("Please enter a Google Apps Script Web App URL first");
+            return;
+        }
+        
+        addSystemMessage("Testing connection to Google Sheets...");
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'test', timestamp: new Date().toISOString() })
+            });
+            
+            // With no-cors, we can't read the response, but if no error, assume success
+            addSystemMessage("✅ Test data sent to Google Sheets! Check your sheet to confirm.");
+        } catch (error) {
+            addSystemMessage("❌ Connection failed. Please check your Web App URL and ensure it's deployed correctly.");
+        }
+    }
+
+    async function sendToGoogleSheets(appointmentData) {
+        if (!googleSheetsUrl) {
+            console.log("No Google Sheets URL configured. Appointment saved locally only.");
+            addBotMessage("<em>Note: Google Sheets integration not configured. Appointment saved locally. Configure in Settings to sync with Google Sheets.</em>");
             return;
         }
 
-        // Validate Shift Time
-        const [hours, minutes] = time.split(':').map(Number);
-        // Morning: 9 (9:00) to 22 (22:00). Night: 22 to 9.
-        // Technically 24/7 covers everything, but we label them.
+        try {
+            const payload = {
+                action: 'addAppointment',
+                timestamp: new Date().toISOString(),
+                ...appointmentData
+            };
+
+            const response = await fetch(googleSheetsUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            addSystemMessage("✅ Appointment synced to Google Sheets!");
+            console.log("Appointment sent to Google Sheets:", payload);
+        } catch (error) {
+            console.error("Error sending to Google Sheets:", error);
+            addBotMessage("<em>Warning: Could not sync to Google Sheets. Appointment saved locally.</em>");
+        }
+    }
+
+    // Booking Logic
+    function confirmBooking() {
+        const name = document.getElementById('patient-name').value.trim();
+        const phone = document.getElementById('patient-phone').value.trim();
+        const email = document.getElementById('patient-email').value.trim();
+        const type = document.getElementById('patient-type').value;
+        const service = document.getElementById('service-type').value;
+        const date = document.getElementById('appt-date').value;
+        const time = document.getElementById('appt-time').value;
+        const notes = document.getElementById('appt-notes').value.trim();
+
+        if (!name || !phone || !date || !time) {
+            alert("Please fill in all required fields (Name, Phone, Date, Time).");
+            return;
+        }
+
+        const shift = getShiftType(time);
         
         const newAppt = {
             id: Date.now(),
             patient: name,
+            phone: phone,
+            email: email,
             type: type,
-            surgery: surgery,
+            service: service,
             date: date,
-            time: time
+            time: time,
+            shift: shift,
+            notes: notes,
+            status: 'Confirmed',
+            createdAt: new Date().toISOString()
         };
 
         appointments.push(newAppt);
         
-        // Sort by date/time
-        appointments.sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
+        // Save to localStorage
+        localStorage.setItem('hospitalAppointments', JSON.stringify(appointments));
 
         closeModal('booking-modal');
         
-        const shift = getShiftType(time);
         addSystemMessage(`✅ Appointment Confirmed!`);
-        addBotMessage(`Successfully booked for <b>${name}</b>.<br>Type: ${type}<br>Procedure: ${surgery}<br>When: ${date} at ${time} (${shift} Shift)<br><br>Your appointment has been added to the schedule.`);
+        addBotMessage(`Successfully booked for <b>${name}</b>.<br>Type: ${type}<br>Service: ${service}<br>When: ${date} at ${time} (${shift} Shift)<br><br>Your appointment has been added to the schedule.`);
+        
+        // Send to Google Sheets
+        sendToGoogleSheets(newAppt);
         
         // Clear form
         document.getElementById('patient-name').value = '';
+        document.getElementById('patient-phone').value = '';
+        document.getElementById('patient-email').value = '';
         document.getElementById('appt-date').value = '';
         document.getElementById('appt-time').value = '';
+        document.getElementById('appt-notes').value = '';
     }
 
     function getShiftType(timeStr) {
@@ -496,9 +797,17 @@
 
     function cancelAppointment(index) {
         if(confirm("Are you sure you want to cancel this appointment?")) {
+            const cancelled = appointments[index];
+            cancelled.status = 'Cancelled';
             appointments.splice(index, 1);
+            localStorage.setItem('hospitalAppointments', JSON.stringify(appointments));
             showAppointments(); // Refresh list
             addSystemMessage("❌ Appointment Cancelled");
+            
+            // Optionally send cancellation to Google Sheets
+            if (googleSheetsUrl) {
+                sendToGoogleSheets({...cancelled, action: 'cancelAppointment'});
+            }
         }
     }
 
@@ -506,6 +815,7 @@
         if(appointments.length === 0) return;
         if(confirm("Cancel ALL appointments? This cannot be undone.")) {
             appointments = [];
+            localStorage.setItem('hospitalAppointments', JSON.stringify(appointments));
             showAppointments();
             addSystemMessage("🗑️ All appointments cleared.");
         }
